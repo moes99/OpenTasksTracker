@@ -7,6 +7,11 @@ import {
   where,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
 // Replace these values with your Firebase project config.
 const firebaseConfig = {
   apiKey: "AIzaSyDw4yyN_W7LEZBieLeot7t_0AcaVeLxJgU",
@@ -20,8 +25,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app, "maindb");
-
-export { db };
+const auth = getAuth(app);
 
 export async function getCollectionData(collectionName) {
   try {
@@ -40,21 +44,31 @@ export async function getCollectionData(collectionName) {
   }
 }
 
-export async function verifyUser(name, password) {
+export async function getUserDetails(email) {
   try {
-    const queryResult = await query(
-      collection(db, "admins"),
-      where("name", "==", name),
-      where("password", "==", password),
-    );
-    const snapshot = await getDocs(queryResult);
-    const data = snapshot.docs.map((doc) => ({
+    const q = query(collection(db, "admins"), where("email", "==", email));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    }));
-    return data[0];
+    }))[0];
   } catch (error) {
-    console.error("Error verifying user:", error);
+    console.error("Error getting user details:", error);
+  }
+}
+
+export async function verifyUser(email, password) {
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    const userDetails = await getUserDetails(email);
+    return userDetails;
+  } catch (error) {
+    console.error("Error verifying user credentials:", error);
     throw error;
   }
 }

@@ -1,31 +1,35 @@
 import { verifyUser } from "./firestore.js";
 import { Admin } from "./classes.js";
 
-const nameInput = document.getElementById("formName");
+const emailInput = document.getElementById("formEmail");
 const passwordInput = document.getElementById("formPassword");
 const loginButton = document.getElementById("loginButton");
-const rememberMeCheckbox = document.getElementById("rememberMe");
 loginButton.addEventListener("click", handleLogin);
 
 async function handleLogin() {
-  const name = nameInput.value.trim();
+  const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
-  const user = await verifyUser(name, password);
   loginButton.disabled = true;
   loginButton.textContent = "Logging in...";
-  console.log(user);
-  if (user) {
-    const currentUser = new Admin(user.id, user.name, user.isSuperAdmin);
-    if (rememberMeCheckbox.checked) {
-      localStorage.setItem("user", JSON.stringify(currentUser));
-    } else {
+  try {
+    const user = await verifyUser(email, password);
+    if (user) {
+      const currentUser = new Admin(
+        user.id,
+        user.name,
+        user.email,
+        user.isSuperAdmin,
+      );
       sessionStorage.setItem("user", JSON.stringify(currentUser));
+      window.location.href = "../index.html";
+    } else {
+      alert("Invalid email or password. Please try again.");
     }
-    window.location.href = "../index.html";
-  } else {
-    alert("Invalid name or password. Please try again.");
+  } catch (error) {
+    console.error("Error during login:", error);
+    alert("An error occurred during login. Please try again later.");
+  } finally {
+    loginButton.disabled = false;
+    loginButton.textContent = "Login";
   }
-  rememberMeCheckbox.checked = false;
-  loginButton.disabled = false;
-  loginButton.textContent = "Login";
 }

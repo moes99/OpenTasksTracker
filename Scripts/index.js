@@ -3,31 +3,29 @@ import { getCollectionData } from "./firestore.js";
 import { Admin } from "./classes.js";
 
 //Checking if the user is logged in
-const user = JSON.parse(
-  sessionStorage.getItem("user") || localStorage.getItem("user"),
-);
+const user = JSON.parse(sessionStorage.getItem("user"));
 if (!user) {
   window.location.href = "Pages/login.html";
 }
-const currentAdmin = new Admin(user.id, user.name, user.isSuperAdmin);
+const currentAdmin = new Admin(
+  user.id,
+  user.name,
+  user.email,
+  user.isSuperAdmin,
+);
 
 //Displaying today's date in the heading
 const dateHeading = document.getElementById("dateHeading");
 const today = new Date();
-const options = {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-};
-const formattedDate = today.toLocaleDateString(undefined, options);
-dateHeading.textContent = `Open Tasks - ${formattedDate}`;
+const day = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
+const formattedDate = `${day}/${month}/${year}`;
+dateHeading.textContent += ` ${formattedDate}`;
 
-//Adding event listener to buttons
-const addTaskBtn = document.getElementById("addTaskBtn");
-const taskList = document.getElementById("taskList");
-
-addTaskBtn.addEventListener("click", showData);
+//Displaying the current user in the navbar
+const currentUserElement = document.getElementById("currentUser");
+currentUserElement.textContent = currentAdmin.name;
 
 //Populating the task list with data from Firestore
 async function showData() {
@@ -41,6 +39,7 @@ async function showData() {
         (task) => `<div class="card mb-3">
           <div class="card-body">
             <h5 class="card-title">Name: ${task.name}</h5>
+            <p class="card-text">Email: ${task.email}</p>
             <p class="card-text">Is Super Admin: ${task.isSuperAdmin}</p>
           </div>
         </div>`,
