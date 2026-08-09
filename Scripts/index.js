@@ -1,6 +1,6 @@
 //Imports and exports
 import { getCollectionData } from "./firestore.js";
-import { Admin } from "./classes.js";
+import { Admin, Task } from "./classes.js";
 
 //Checking if the user is logged in
 const user = JSON.parse(sessionStorage.getItem("user"));
@@ -12,6 +12,7 @@ const currentAdmin = new Admin(
   user.name,
   user.email,
   user.isSuperAdmin,
+  user.role,
 );
 
 //Displaying today's date in the heading
@@ -28,26 +29,34 @@ const currentUserElement = document.getElementById("currentUser");
 currentUserElement.textContent = currentAdmin.name;
 
 //Populating the task list with data from Firestore
-async function showData() {
-  try {
-    console.log("Fetching data from Firestore...");
-    taskList.innerHTML = "<p>Loading...</p>";
-    const data = await getCollectionData("admins");
-    console.log("Fetched Firestore documents:", data);
-    taskList.innerHTML = data
-      .map(
-        (task) => `<div class="card mb-3">
-          <div class="card-body">
-            <h5 class="card-title">Name: ${task.name}</h5>
-            <p class="card-text">Email: ${task.email}</p>
-            <p class="card-text">Is Super Admin: ${task.isSuperAdmin}</p>
-          </div>
-        </div>`,
-      )
-      .join("");
-  } catch (error) {
-    console.error("Failed to fetch Firestore data:", error);
-    taskList.innerHTML =
-      "<p>Could not load data. Check your Firestore connection.</p>";
-  }
-}
+const tasksContainer = document.getElementById("tasksContainer");
+const spinners = document.getElementById("spinners");
+const tasksArray = [];
+const editTaskBtns = [];
+window.onload = async () => {
+  const tasks = await getCollectionData("tasks");
+  tasks.forEach((task) => {
+    const newTask = new Task(
+      task.id,
+      task.title,
+      task.number,
+      task.scope,
+      task.scopeProgress,
+      task.dateCreated,
+      task.isLocked,
+      task.isLockedBy,
+    );
+    tasksArray.push(newTask);
+  });
+
+  //Building ui and adding event listeners
+  tasksContainer.innerHTML = tasksArray
+    .map((task) => task.buildTaskCard())
+    .join("");
+
+  tasksArray.forEach((task) => {
+    const btn = document.getElementById(`editTaskBtn_${task.id}`);
+    btn?.addEventListener("click", () => task.editTask());
+  });
+  spinners.remove();
+};

@@ -7,7 +7,7 @@ const loginButton = document.getElementById("loginButton");
 loginButton.addEventListener("click", handleLogin);
 
 async function handleLogin() {
-  const email = emailInput.value.trim();
+  const email = emailInput.value.trim().toLowerCase();
   const password = passwordInput.value.trim();
   loginButton.disabled = true;
   loginButton.textContent = "Logging in...";
@@ -19,6 +19,7 @@ async function handleLogin() {
         user.name,
         user.email,
         user.isSuperAdmin,
+        user.role,
       );
       sessionStorage.setItem("user", JSON.stringify(currentUser));
       window.location.href = "../index.html";

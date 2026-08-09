@@ -1,0 +1,75 @@
+.taskScope:hover {
+  background-color: rgb(156, 247, 247);
+}
+
+.taskScope > span:hover {
+  color: black;
+}
+
+.M-Scope {
+  color: red;
+}
+
+.E-Scope {
+  color: rgb(255, 136, 0);
+}
+
+.P-Scope {
+  color: rgb(4, 182, 25);
+}
+
+.En-Scope,
+.T24-Scope {
+  color: blue;
+}
+
+.F-Scope {
+  color: rgb(218, 131, 145);
+}
+
+.Scope-Text {
+  font-size: 14px;
+}
+
+.card {
+  box-shadow: 0 transparent;
+  transition: box-shadow 0.3s ease-in-out;
+  width: 100%;
+}
+
+.card:hover {
+  box-shadow: 0rem 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.card-header {
+  padding: 6px;
+}
+
+.card-body {
+  padding: 6px;
+}
+
+.card-body > hr {
+  margin-top: 0px;
+  margin-bottom: 6px;
+}
+
+.card-text > * {
+  margin: 0px;
+  padding: 0px;
+}
+
+.card-text > * > * {
+  margin: 0px;
+  padding: 0px;
+}
+
+.card-footer {
+  padding: 6px;
+}
+
+.card-footer > * > * {
+  margin: 0px;
+  padding: 0px;
+}
