@@ -1,6 +1,7 @@
 //Imports and exports
 import { getCollectionData } from "./firestore.js";
 import { Admin, Task } from "./classes.js";
+import { assignEventListenersToTask } from "./common.js";
 
 //Checking if the user is logged in
 const user = JSON.parse(sessionStorage.getItem("user"));
@@ -14,6 +15,9 @@ const currentAdmin = new Admin(
   user.isSuperAdmin,
   user.role,
 );
+// Make currentAdmin available globally to modules/pages that cannot import index.js
+window.currentAdmin = currentAdmin;
+export { currentAdmin };
 
 //Displaying today's date in the heading
 const dateHeading = document.getElementById("dateHeading");
@@ -32,7 +36,6 @@ currentUserElement.textContent = currentAdmin.name;
 const tasksContainer = document.getElementById("tasksContainer");
 const spinners = document.getElementById("spinners");
 const tasksArray = [];
-const editTaskBtns = [];
 window.onload = async () => {
   const tasks = await getCollectionData("tasks");
   tasks.forEach((task) => {
@@ -49,14 +52,14 @@ window.onload = async () => {
     tasksArray.push(newTask);
   });
 
-  //Building ui and adding event listeners
+  //Building ui
   tasksContainer.innerHTML = tasksArray
     .map((task) => task.buildTaskCard())
     .join("");
 
-  tasksArray.forEach((task) => {
-    const btn = document.getElementById(`editTaskBtn_${task.id}`);
-    btn?.addEventListener("click", () => task.editTask());
-  });
   spinners.remove();
+  //Adding event listeners
+  tasksArray.forEach((task) => {
+    assignEventListenersToTask(task);
+  });
 };

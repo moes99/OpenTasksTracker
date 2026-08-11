@@ -42,11 +42,9 @@
   cursor: pointer;
 }
 
-.card-header {
-  padding: 6px;
-}
-
-.card-body {
+.card-header,
+.card-body,
+.card-footer {
   padding: 6px;
 }
 
@@ -55,20 +53,8 @@
   margin-bottom: 6px;
 }
 
-.card-text > * {
-  margin: 0px;
-  padding: 0px;
-}
-
-.card-text > * > * {
-  margin: 0px;
-  padding: 0px;
-}
-
-.card-footer {
-  padding: 6px;
-}
-
+.card-text > *,
+.card-text > * > *,
 .card-footer > * > * {
   margin: 0px;
   padding: 0px;

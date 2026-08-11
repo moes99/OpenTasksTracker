@@ -2,9 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/fireba
 import {
   getFirestore,
   collection,
+  doc,
   getDocs,
+  getDoc,
+  updateDoc,
   query,
   where,
+  Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 import {
@@ -70,5 +74,39 @@ export async function verifyUser(email, password) {
   } catch (error) {
     console.error("Error verifying user credentials:", error);
     throw error;
+  }
+}
+
+export async function updateCollectionData(collectionName, docId, payload) {
+  const docRef = doc(db, collectionName, docId);
+  try {
+    await updateDoc(docRef, payload);
+  } catch (error) {
+    alert("Error updating document!");
+    console.log(error);
+  }
+}
+
+export function timestampFromDate(date) {
+  return Timestamp.fromDate(date);
+}
+
+export async function getFieldValue(
+  collectionName,
+  docId,
+  fieldName1,
+  fieldName2 = null,
+) {
+  const docRef = doc(db, collectionName, docId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    if (fieldName2) {
+      return [docSnap.get(fieldName1), docSnap.get(fieldName2)];
+    } else {
+      return [docSnap.get(fieldName1)];
+    }
+  } else {
+    return null;
   }
 }
