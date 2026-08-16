@@ -3,8 +3,21 @@ import { timestampFromDate } from "./firestore.js";
 
 export function assignEventListenersToTask(task) {
   //Edit task btn
-  const editTaskbtn = document.getElementById(`editTaskBtn_${task.id}`);
-  editTaskbtn?.addEventListener("click", () => task.editTask(editTaskbtn));
+  task.editTaskBtn = document.getElementById(`editTaskBtn_${task.id}`);
+  task.editTaskBtn.addEventListener("click", () => task.editTask());
+
+  //Delete task btn
+  task.deleteTaskBtn = document.getElementById(`deleteTaskBtn_${task.id}`);
+  task.deleteTaskBtn.addEventListener("click", () => {
+    task.deleteTask();
+    task = null;
+  });
+
+  //Edit scope btn
+  task.editScopeBtn = document.getElementById(`editScopeBtn_${task.id}`);
+  task.editScopeBtn.addEventListener("click", () => task.updateScope());
+  task.taskScope = document.getElementById(`taskScope_${task.id}`);
+  task.scopeContainer = document.getElementById(`scopeContainer_${task.id}`);
 
   //Number and title fields
   const nbTitle = document.getElementById(`number_title_${task.id}`);
@@ -22,19 +35,10 @@ export function assignEventListenersToTask(task) {
   task.spinner = document.getElementById(`spinner_${task.id}`);
 }
 
-export function createEmptyTask() {
-  return new Task(
-    "",
-    "",
-    "",
-    "M E P",
-    {
-      M: { assignedTo: "", isCompleted: false, situation: "" },
-      P: { assignedTo: "", isCompleted: false, situation: "" },
-      E: { assignedTo: "", isCompleted: false, situation: "" },
-    },
-    timestampFromDate(new Date()),
-    false,
-    "",
+export function insertNoTasksMessage() {
+  const tasksContainer = document.getElementById("tasksContainer");
+  tasksContainer.insertAdjacentHTML(
+    "beforebegin",
+    '<h3 class="text-center">There are no tasks available. Enjoy your free time!</h3>',
   );
 }

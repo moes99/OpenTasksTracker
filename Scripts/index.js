@@ -1,7 +1,7 @@
 //Imports and exports
-import { getCollectionData } from "./firestore.js";
+import { getCollectionData, createDoc } from "./firestore.js";
 import { Admin, Task } from "./classes.js";
-import { assignEventListenersToTask } from "./common.js";
+import { assignEventListenersToTask, insertNoTasksMessage } from "./common.js";
 
 //Checking if the user is logged in
 const user = JSON.parse(sessionStorage.getItem("user"));
@@ -32,6 +32,12 @@ dateHeading.textContent += ` ${formattedDate}`;
 const currentUserElement = document.getElementById("currentUser");
 currentUserElement.textContent = currentAdmin.name;
 
+//Adding event listener to add task button
+const addTaskBtn = document.getElementById("addTaskBtn");
+addTaskBtn.addEventListener("click", () => {
+  Task.addTask();
+});
+
 //Populating the task list with data from Firestore
 const tasksContainer = document.getElementById("tasksContainer");
 const spinners = document.getElementById("spinners");
@@ -53,11 +59,14 @@ window.onload = async () => {
   });
 
   //Building ui
-  tasksContainer.innerHTML = tasksArray
-    .map((task) => task.buildTaskCard())
-    .join("");
+  if (tasksArray.length > 0) {
+    tasksContainer.innerHTML = tasksArray
+      .map((task) => task.buildTaskCard())
+      .join("");
+  } else insertNoTasksMessage();
 
   spinners.remove();
+
   //Adding event listeners
   tasksArray.forEach((task) => {
     assignEventListenersToTask(task);

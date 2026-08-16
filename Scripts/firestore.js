@@ -6,6 +6,8 @@ import {
   getDocs,
   getDoc,
   updateDoc,
+  addDoc,
+  deleteDoc,
   query,
   where,
   Timestamp,
@@ -78,8 +80,8 @@ export async function verifyUser(email, password) {
 }
 
 export async function updateCollectionData(collectionName, docId, payload) {
-  const docRef = doc(db, collectionName, docId);
   try {
+    const docRef = doc(db, collectionName, docId);
     await updateDoc(docRef, payload);
   } catch (error) {
     alert("Error updating document!");
@@ -108,5 +110,25 @@ export async function getFieldValue(
     }
   } else {
     return null;
+  }
+}
+
+export async function createDoc(collectionName, payload) {
+  try {
+    const collectionRef = collection(db, collectionName);
+    await addDoc(collectionRef, payload);
+  } catch (error) {
+    alert("Error creating new document!");
+    console.log(error);
+  }
+}
+
+export async function deleteDocument(collectionName, docId) {
+  try {
+    const docRef = doc(db, collectionName, docId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    alert("Error deleting document!");
+    console.log(error);
   }
 }

@@ -1,4 +1,11 @@
-import { updateCollectionData, getFieldValue } from "./firestore.js";
+import { insertNoTasksMessage } from "./common.js";
+import {
+  updateCollectionData,
+  getFieldValue,
+  createDoc,
+  deleteDocument,
+  timestampFromDate,
+} from "./firestore.js";
 
 export class Admin {
   constructor(id, name, email, isSuperAdmin, role) {
@@ -30,14 +37,45 @@ export class Task {
     this.isLocked = isLocked;
     this.isLockedBy = isLockedBy;
     this.spinner = null;
+    this.editTaskBtn = null;
+    this.deleteTaskBtn = null;
+    this.editScopeBtn = null;
+    this.taskScope = null;
+    this.scopeContainer = null;
   }
 
-  async editTask(btn) {
-    const isEditRequest = btn.innerHTML.includes("bi-pencil");
+  static async addTask() {
+    try {
+      await createDoc("tasks", this.createEmptyTask());
+      window.location.reload();
+    } catch (error) {
+      alert("Error creating new task!");
+      console.log(error);
+    }
+  }
+
+  static createEmptyTask() {
+    return {
+      title: "New Task",
+      number: "x.x.x",
+      scope: "M E P",
+      scopeProgress: {
+        M: { assignedTo: "", isCompleted: false, situation: "" },
+        E: { assignedTo: "", isCompleted: false, situation: "" },
+        P: { assignedTo: "", isCompleted: false, situation: "" },
+      },
+      dateCreated: timestampFromDate(new Date()),
+      isLocked: false,
+      isLockedBy: "",
+    };
+  }
+
+  async editTask() {
+    const isEditRequest = this.editTaskBtn.innerHTML.includes("bi-pencil");
 
     if (isEditRequest) {
       if (this.isLocked && this.isLockedBy === currentAdmin.name) {
-        btn.innerHTML = '<i class="bi bi-floppy"></i>';
+        this.editTaskBtn.innerHTML = '<i class="bi bi-floppy"></i>';
         this.toggleInputFields();
         return;
       }
@@ -48,7 +86,7 @@ export class Task {
         if (isLockedBy === currentAdmin.name) {
           this.isLocked = true;
           this.isLockedBy = isLockedBy;
-          btn.innerHTML = '<i class="bi bi-floppy"></i>';
+          this.editTaskBtn.innerHTML = '<i class="bi bi-floppy"></i>';
           this.toggleInputFields();
         } else {
           alert(
@@ -61,7 +99,7 @@ export class Task {
       } else {
         this.toggleSpinner();
         await this.acquireLock();
-        btn.innerHTML = '<i class="bi bi-floppy"></i>';
+        this.editTaskBtn.innerHTML = '<i class="bi bi-floppy"></i>';
         this.toggleInputFields();
         this.toggleSpinner();
       }
@@ -72,11 +110,11 @@ export class Task {
         );
         return;
       }
+      this.toggleInputFields();
       this.toggleSpinner();
       await this.updateTask();
       await this.releaseLock();
-      btn.innerHTML = '<i class="bi bi-pencil"></i>';
-      this.toggleInputFields();
+      this.editTaskBtn.innerHTML = '<i class="bi bi-pencil"></i>';
       this.toggleSpinner();
     }
   }
@@ -168,14 +206,25 @@ export class Task {
     this.spinner.classList.toggle("d-none");
   }
 
-  deleteTask() {
-    // implement task deletion logic here
+  async deleteTask() {
+    try {
+      this.toggleSpinner();
+      await deleteDocument("tasks", this.id);
+      this.toggleSpinner();
+      document.getElementById(`task_${this.id}`).remove();
+      const tasksContainer = document.getElementById("tasksContainer");
+      if (tasksContainer.children.length == 0) insertNoTasksMessage();
+    } catch (error) {
+      alert("Error deleting task!");
+      console.log(error);
+    }
   }
 
   async updateTask() {
     await updateCollectionData("tasks", this.id, {
       number: this.number,
       title: this.title,
+      scope: this.scope,
       scopeProgress: this.scopeProgress,
     });
   }
@@ -186,6 +235,59 @@ export class Task {
     const title = space === -1 ? "" : values.slice(space + 1);
     this.number = nb;
     this.title = title;
+  }
+
+  updateScope() {
+    if (this.editTaskBtn.innerHTML.includes("bi-floppy")) {
+      const newScope = prompt(
+        'Enter new project. Make sure the scopes are comma-seperated. For example: "M E P" not "MEP"',
+        "M E P",
+      ).trim();
+
+      //If scope hasn't changed
+      if (newScope === this.scope) return;
+
+      //Updating task scope and scope badge
+      this.scope = newScope;
+      this.taskScope.innerHTML = this.stringifyScope();
+
+      //Updating scope progress html elements
+      //Step 1: delete removed scope
+      for (const [key, value] of Object.entries(this.scopeProgress)) {
+        if (!this.scope.includes(key)) {
+          document.getElementById(`${key}_ScopeProgress_${this.id}`).remove();
+          delete this.scopeProgress[key];
+        }
+      }
+      //Step 2: update this.scopeProgress and its html element
+      const scopeArray = this.scope.split(" ");
+      scopeArray.forEach((scope) => {
+        if (!Object.hasOwn(this.scopeProgress, scope)) {
+          this.scopeProgress[scope] = {
+            assignedTo: "",
+            isCompleted: false,
+            situation: "",
+          };
+          const newHTMLobject = this.stringifyOneScopeProgress(
+            scope,
+            this.scopeProgress[scope],
+            false,
+          );
+          this.scopeContainer.insertAdjacentHTML("beforeend", newHTMLobject);
+          const newScopeProgress = this.scopeContainer.querySelector(
+            `#${scope}_ScopeProgress_${this.id}`,
+          );
+          const fields = newScopeProgress.querySelectorAll(`.input_${this.id}`);
+          Array.from(fields).forEach((field) => {
+            field.addEventListener("input", () =>
+              this.updateScopeProgress(field),
+            );
+          });
+        }
+      });
+    } else {
+      alert("You must be editing this task in order to alter its scope!");
+    }
   }
 
   updateScopeProgress(inputField) {
@@ -211,8 +313,14 @@ export class Task {
   stringifyScopeProgress() {
     let HTMLstring = "";
     for (const [key, value] of Object.entries(this.scopeProgress)) {
-      HTMLstring += `<!-- ${key} Scope Progress -->
-              <div class="row col text-start mb-1">
+      HTMLstring += this.stringifyOneScopeProgress(key, value);
+    }
+    return HTMLstring;
+  }
+
+  stringifyOneScopeProgress(key, value, disabled = true) {
+    const HTMLstring = `<!-- ${key} Scope Progress -->
+              <div class="row col text-start mb-1" id="${key}_ScopeProgress_${this.id}">
                 <h5 class="row mb-2">${key} Progress</h5>
                 <div class="input-group mb-1">
                   <span class="input-group-text">Assigned to:</span>
@@ -223,14 +331,14 @@ export class Task {
                     aria-label="Engineer Name"
                     id="${key}_assignedTo_${this.id}"
                     value="${value.assignedTo}"
-                    disabled
+                    ${disabled ? "disabled" : ""}
                   />
                 </div>
                 <div class="input-group mb-1">
                   <label class="input-group-text" for="${key}_isCompleted_${this.id}"
                     >Is Completed?</label
                   >
-                  <select class="form-select input_${this.id}" id="${key}_isCompleted_${this.id}" disabled>
+                  <select class="form-select input_${this.id}" id="${key}_isCompleted_${this.id}" ${disabled ? "disabled" : ""}>
                     <option value="true" ${value.isCompleted ? "selected" : ""}>Yes</option>
                     <option value="false" ${!value.isCompleted ? "selected" : ""}>No</option>
                   </select>
@@ -243,12 +351,11 @@ export class Task {
                     placeholder="Situation"
                     aria-label="Situation"
                     id="${key}_situation_${this.id}"
-                    disabled
+                    ${disabled ? "disabled" : ""}
                     value="${value.situation}"
                   />
                 </div>
               </div>`;
-    }
     return HTMLstring;
   }
 
@@ -264,6 +371,7 @@ export class Task {
                 <div
                   class="badge border border-dark p-2 btn btn-outline-primary taskScope"
                   id="taskScope_${this.id}"
+                  title="Task Scope"
                 >
                 ${this.stringifyScope()}
                 </div>
@@ -282,20 +390,23 @@ export class Task {
                     type="button"
                     class="btn btn-outline-success"
                     id="editTaskBtn_${this.id}"
+                    title="Edit Task"
                   >
                     <i class="bi bi-pencil"></i>
                   </button>
                   <button
                     type="button"
                     class="btn btn-outline-primary"
-                    id="lockTaskBtn_${this.id}"
+                    id="editScopeBtn_${this.id}"
+                    title="Edit Scope"
                   >
-                    <i class="${this.isLocked ? "bi bi-unlock" : "bi bi-lock"}"></i>
+                    <i class="bi bi-list-ul"></i>
                   </button>
                   <button
                     type="button"
                     class="btn btn-outline-danger"
                     id="deleteTaskBtn_${this.id}"
+                    title="Delete Task"
                   >
                     <i class="bi bi-trash"></i>
                   </button>
