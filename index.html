@@ -51,13 +51,20 @@
             class="navbar-nav me-auto mb-2 mb-lg-0 w-100 justify-content-center"
           >
             <li class="nav-item mx-2">
-              <a class="nav-link active" aria-current="page" href="#">Tasks</a>
+              <a class="nav-link active" aria-current="page" id="tasksLink"
+                >Tasks</a
+              >
             </li>
             <li class="nav-item mx-2">
-              <a class="nav-link" aria-current="page" href="#">Services</a>
+              <a class="nav-link" aria-current="page" id="referencesLink"
+                >Project References</a
+              >
             </li>
             <li class="nav-item mx-2">
-              <a class="nav-link" href="#">Apps</a>
+              <a class="nav-link" id="servicesLink">Services</a>
+            </li>
+            <li class="nav-item mx-2">
+              <a class="nav-link" id="appsLink">Apps</a>
             </li>
           </ul>
           <div class="row text-center align-items-center">
@@ -65,7 +72,7 @@
               class="bi bi-person-circle col-sm-2"
               style="font-size: 1.5rem"
             ></i>
-            <a class="nav-link col-sm-8" href="#" id="currentUser"></a>
+            <a class="nav-link col-sm-8" id="currentUser"></a>
           </div>
         </div>
       </div>
@@ -89,6 +96,68 @@
       class="row row-cols-1 row-cols-md-2 g-4 min-vh-100 p-0"
       id="tasksContainer"
     ></div>
+
+    <!-- Project References Container-->
+    <div class="d-none card" id="referencesContainer">
+      <div class="card-body">
+        <div
+          class="row flex-nowrap justify-content-between align-items-center mb-2"
+        >
+          <h5 class="col mb-0">References Viewer (Read-only)</h5>
+          <div class="col text-end">
+            <button
+              class="btn btn-outline-success"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#iframeContainer"
+              aria-expanded="false"
+              aria-controls="iframeContainer"
+            >
+              <i class="bi bi-arrows-collapse"></i>
+            </button>
+          </div>
+        </div>
+        <div class="w-100 collapse mb-1" id="iframeContainer">
+          <div
+            class="d-flex justify-content-center align-items-center"
+            style="height: 900px"
+            id="iframeSpinner"
+          >
+            <div
+              class="spinner-grow spinner-grow-lg text-success"
+              role="status"
+            ></div>
+          </div>
+          <iframe
+            src="https://1drv.ms/x/c/96ebeea73e28c4f2/IQTDjYlrpNbZQIzriApI0CE3AXMTDTMkk2GyiZ3Pf3wX_80?AllowTyping=True&wdHideGridlines=True&wdHideHeaders=True&wdDownloadButton=True&wdInConfigurator=True&wdInConfigurator=True"
+            frameborder="0"
+            scrolling="no"
+            loading="lazy"
+            class="offscreen"
+            id="referencesIFrame"
+          ></iframe>
+        </div>
+        <hr />
+        <h5 class="card-title mb-1 mt-2">
+          Use this
+          <a
+            href="https://1drv.ms/x/c/96ebeea73e28c4f2/IQDDjYlrpNbZQIzriApI0CE3AX47EAMfQCc6N5vAEmkPTF8?e=az9yR5"
+            ><i class="bi bi-file-earmark-spreadsheet"></i>link</a
+          >
+          to edit the Excel file
+        </h5>
+      </div>
+      <div class="card-footer text-muted">
+        Please note that viewer is merely read-only. Use the provided link to
+        edit the excel.
+      </div>
+    </div>
+
+    <!-- Services Container-->
+    <div class="row min-vh-100 p-0 d-none" id="servicesContainer"></div>
+
+    <!-- Apps Container-->
+    <div class="row min-vh-100 p-0 d-none" id="appsContainer"></div>
 
     <!-- Add Task Button -->
     <button

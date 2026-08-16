@@ -18,6 +18,8 @@ export class Admin {
 }
 
 export class Task {
+  static instances = [];
+
   constructor(
     id,
     title,
@@ -42,6 +44,7 @@ export class Task {
     this.editScopeBtn = null;
     this.taskScope = null;
     this.scopeContainer = null;
+    Task.instances.push(this);
   }
 
   static async addTask() {
@@ -76,6 +79,7 @@ export class Task {
     if (isEditRequest) {
       if (this.isLocked && this.isLockedBy === currentAdmin.name) {
         this.editTaskBtn.innerHTML = '<i class="bi bi-floppy"></i>';
+        this.editTaskBtn.title = "Save Changes";
         this.toggleInputFields();
         return;
       }
@@ -87,6 +91,7 @@ export class Task {
           this.isLocked = true;
           this.isLockedBy = isLockedBy;
           this.editTaskBtn.innerHTML = '<i class="bi bi-floppy"></i>';
+          this.editTaskBtn.title = "Save Changes";
           this.toggleInputFields();
         } else {
           alert(
@@ -100,6 +105,7 @@ export class Task {
         this.toggleSpinner();
         await this.acquireLock();
         this.editTaskBtn.innerHTML = '<i class="bi bi-floppy"></i>';
+        this.editTaskBtn.title = "Save Changes";
         this.toggleInputFields();
         this.toggleSpinner();
       }
@@ -115,6 +121,7 @@ export class Task {
       await this.updateTask();
       await this.releaseLock();
       this.editTaskBtn.innerHTML = '<i class="bi bi-pencil"></i>';
+      this.editTaskBtn.title = "Edit Task";
       this.toggleSpinner();
     }
   }
